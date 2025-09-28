@@ -14,6 +14,13 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [ 'lab1' ] 
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
 
     steps:
     - uses: actions/checkout@v4
