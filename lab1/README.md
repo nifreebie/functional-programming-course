@@ -43,7 +43,7 @@ loop(N, Acc) ->
 ## Решение через модульность 
 
 ```erlang
-sum_multiples_module(N) when is_integer(N), N >= 0 ->
+sum_multiples_module(N) ->
     Seq = lists:seq(1, N - 1),
     Multiples = lists:filter(
         fun(X) -> (X rem 3) =:= 0 orelse (X rem 5) =:= 0 end,
@@ -138,10 +138,10 @@ sum_powers_rec() ->
 sum_powers_rec(1) ->
     0;
 sum_powers_rec(N) ->
-    Rest = sum_powers_rec(N - 1),
+    Ans = sum_powers_rec(N - 1),
     case sum_digit_pows(N) =:= N of
-        true -> Rest + N;
-        false -> Rest
+        true -> Ans + N;
+        false -> Ans
     end.
 ```
 
@@ -165,14 +165,14 @@ loop(N, Acc) ->
 ```erlang
 sum_powers_module() ->
     Seq = lists:seq(2, ?LIMIT),
-    Ans = lists:filter(fun(N) -> sum_digit_pows(N) =:= N end, Numbers),
+    Ans = lists:filter(fun(N) -> sum_digit_pows(N) =:= N end, Seq),
     lists:foldl(fun(X, Acc) -> X + Acc end, 0, Ans).
 ```
 ## Использование map
 ```erlang 
 sum_powers_map() ->
     Seq = lists:seq(2, ?LIMIT),
-    Map = lists:map(fun(N) -> {N, sum_digit_pows(N)} end, Numbers),
+    Map = lists:map(fun(N) -> {N, sum_digit_pows(N)} end, Seq),
     Ans = lists:filter(fun({N, S}) -> N =:= S end, Map),
     lists:foldl(fun({N, _}, Acc) -> N + Acc end, 0, Ans).
 ```
