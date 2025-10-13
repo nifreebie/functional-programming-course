@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [ 'lab1' ] 
+        dir: [ 'lab1', 'lab2' ] 
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
