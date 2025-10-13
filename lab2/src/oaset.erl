@@ -94,6 +94,7 @@ remove(Key, Set = {set, Size, Count, Table}) ->
             Set
     end.
 
+-spec filter(fun((term()) -> boolean()), t()) -> t().
 filter(Pred, Set) when is_function(Pred, 1) ->
     foldl(
         fun(E, Acc) ->
@@ -106,9 +107,11 @@ filter(Pred, Set) when is_function(Pred, 1) ->
         Set
     ).
 
+-spec map(fun((term()) -> term()), t()) -> t().
 map(Fun, Set) when is_function(Fun, 1) ->
     foldl(fun(E, Acc) -> add(Fun(E), Acc) end, new(), Set).
 
+-spec foldl(fun((term(), term()) -> term()), term(), t()) -> term().
 foldl(F, Acc0, {set, Size, _Count, Table}) when is_function(F, 2) ->
     foldl_idx(1, Size, Table, F, Acc0).
 
@@ -123,6 +126,7 @@ foldl_idx(I, Size, Table, F, Acc) ->
         end,
     foldl_idx(I + 1, Size, Table, F, Acc2).
 
+-spec foldr(fun((term(), term()) -> term()), term(), t()) -> term().
 foldr(F, Acc0, {set, Size, _Count, Table}) when is_function(F, 2) ->
     foldr_idx(Size, Table, F, Acc0).
 
@@ -137,9 +141,11 @@ foldr_idx(I, Table, F, Acc) ->
         end,
     foldr_idx(I - 1, Table, F, Acc2).
 
+-spec union(t(), t()) -> t().
 union(A, B) ->
     foldl(fun(E, Acc) -> add(E, Acc) end, A, B).
 
+-spec equals(t(), t()) -> boolean().
 equals(A = {set, _Sa, CountA, _Ta}, B = {set, _Sb, CountB, _Tb}) ->
     case CountA =:= CountB of
         false -> false;
