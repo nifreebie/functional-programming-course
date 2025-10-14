@@ -6,9 +6,11 @@ add_remove_test() ->
     S1 = oaset:add(1, S),
     ?assert(oaset:contains(S1, 1)),
     ?assert(oaset:size(S1) =:= 1),
-    S2 = oaset:remove(1, S1),
-    ?assert(not oaset:contains(S2, 1)),
-    ?assert(oaset:size(S2) =:= 0).
+    S2 = oaset:add(1, S1),
+    ?assert(oaset:size(S2) =:= 1),
+    S3 = oaset:remove(1, S1),
+    ?assert(not oaset:contains(S3, 1)),
+    ?assert(oaset:size(S3) =:= 0).
 
 map_filter_fold_test() ->
     S = oaset:from_list([1, 2, 3, 4, 5]),
