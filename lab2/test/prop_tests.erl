@@ -46,6 +46,6 @@ prop_map_identity() ->
     ).
 
 prop_runner_test() ->
-    Opts = [{numtests, 3}, {max_size, 20}, {timeout, 2000}],
+    Opts = [{numtests, 100}, {max_size, 20}, {timeout, 2000}],
     Failed = proper:module(?MODULE, Opts),
     ?_assertEqual([], Failed).
