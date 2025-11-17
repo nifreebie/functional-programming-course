@@ -64,7 +64,7 @@ process_ready_outputs(State) ->
             Step = maps:get(step, State),
             NextX = maps:get(next_x, State),
             MaxX = maps:get(max_x, State),
-            
+
             NextX1 =
                 case NextX of
                     undefined ->
