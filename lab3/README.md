@@ -99,7 +99,7 @@
         end.
     ```
   - `interp_newton` — интерполяция Ньютна.
-    ```elixir
+    ```erlang
     -module(interp_newton).
     -export([interp/3]).
 
@@ -206,7 +206,7 @@
         eval_newton_loop(Coefs, Xs, X, K - 1, NewAcc).
     ```
   - `printer` — поток вывода в `stdout`.
-    ```elixir
+    ```erlang
     -module(printer).
     -export([start/0]).
 
@@ -232,7 +232,7 @@
     ```
 
   - `coordinator` — держит буфер точек, генерирует запросы для сетки step, вызывает алгоритмы и посылает результаты в printer.
-    ```elixir
+    ```erlang
     -module(coordinator).
     -export([start/4]).
 
@@ -348,7 +348,7 @@
         A + B.
     ```
   - `lab_interp` — точка входа в приложение.
-    ```elixir
+    ```erlang
     -module(lab_interp).
     -export([main/1, parse_args/1]).
     -record(opts, {algorithms = [], step = 1.0, newton_n = 4}).
