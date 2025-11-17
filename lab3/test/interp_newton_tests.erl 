@@ -1,0 +1,14 @@
+-module(interp_newton_tests).
+-include_lib("eunit/include/eunit.hrl").
+
+buf4() -> [{0.0,0.0},{1.0,1.0},{2.0,2.0},{3.0,3.0}].
+
+interp_newton_basic_test() ->
+    Opt = #{name => "newton", n => 4},
+    ?assertEqual({ok,0.0}, interp_newton:interp(buf4(), Opt, 0.0)),
+    ?assertEqual({ok,1.5}, interp_newton:interp(buf4(), Opt, 1.5)),
+    ?assertEqual({ok,3.0}, interp_newton:interp(buf4(), Opt, 3.0)).
+
+interp_newton_exact_test() ->
+    Opt = #{name => "newton", n => 4},
+    ?assertEqual({ok,2.0}, interp_newton:interp(buf4(), Opt, 2.0)).
