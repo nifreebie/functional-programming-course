@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [ 'lab1', 'lab2' ] 
+        dir: [ 'lab1', 'lab2', 'lab3' ] 
     defaults:
       run:
         working-directory: ${{ matrix.dir }}
@@ -31,7 +31,7 @@ jobs:
         rebar3-version: 3.18.0
     - name: Compile
       run: rebar3 compile
-    - name: Formet check
+    - name: Format check
       run: rebar3 fmt -c
     - name: Run tests
       run: rebar3 do eunit, ct
