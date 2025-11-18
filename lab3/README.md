@@ -335,7 +335,7 @@
                     Algs
                 ),
 
-                NewNext = float_add(NextX, Step),
+                NewNext = NextX + Step,
                 process_loop(State#{next_x := NewNext});
             EOF == true ->
                 Printer ! {finished},
@@ -343,9 +343,6 @@
             true ->
                 loop(State)
         end.
-
-    float_add(A, B) ->
-        A + B.
     ```
   - `lab_interp` — точка входа в приложение.
     ```erlang
