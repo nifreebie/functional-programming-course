@@ -1,0 +1,33 @@
+-module(p2p_crypto).
+-export([
+    generate_keypair/0,
+    pubkey_to_bin/1,
+    compute_shared_key/2,
+    encrypt/2,
+    decrypt/2
+]).
+
+generate_keypair() ->
+    {Pub, Priv} = crypto:generate_key(ecdh, secp256r1),
+    {Pub, Priv}.
+
+pubkey_to_bin(Pub) ->
+    term_to_binary(Pub).
+
+compute_shared_key(TheirPubBin, MyPriv) ->
+    TheirPub = binary_to_term(TheirPubBin),
+    Shared = crypto:compute_key(ecdh, TheirPub, MyPriv, secp256r1),
+    crypto:hash(sha256, Shared).
+
+encrypt(Key, PlainBin) when is_binary(Key), is_binary(PlainBin) ->
+    IV = crypto:strong_rand_bytes(12),
+    {Cipher, Tag} = crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, PlainBin, <<>>, true),
+    <<IV/binary, Tag/binary, Cipher/binary>>.
+
+decrypt(Key, <<IV:12/binary, Tag:16/binary, Cipher/binary>>) ->
+    case crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Cipher, <<>>, Tag, false) of
+        error -> {error, bad_tag};
+        Plain -> {ok, Plain}
+    end;
+decrypt(_Key, _Other) ->
+    {error, bad_format}.
