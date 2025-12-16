@@ -38,7 +38,8 @@ init({Sock, NodePid}) ->
 send_framed(Sock, Bin) when is_binary(Bin) ->
     Pack = <<(byte_size(Bin)):32/big, Bin/binary>>,
     case gen_tcp:send(Sock, Pack) of
-        ok -> ok;
+        ok ->
+            ok;
         {error, Reason} ->
             io:format("[p2p_conn][error] send failed: ~p~n", [Reason]),
             {error, Reason}
@@ -55,13 +56,10 @@ take_frame(<<Len:32/big, Rest/binary>>) ->
 handle_info({tcp, Socket, Data}, State = #state{sock = Socket}) ->
     NewBuf = <<(State#state.recv_buf)/binary, Data/binary>>,
     process_frames(Socket, NewBuf, State#state{recv_buf = <<>>});
-
 handle_info({tcp_closed, _Socket}, State) ->
     {stop, normal, State};
-
 handle_info({tcp_error, _Socket, Reason}, State) ->
     {stop, Reason, State};
-
 handle_info(_, State) ->
     {noreply, State}.
 
@@ -78,8 +76,10 @@ process_frames(Socket, Buf, State) ->
                         State#state.our_priv
                     ),
                     inet:setopts(Socket, [{active, once}]),
-                    io:format("[p2p_conn] secure channel established with ~p~n",
-                              [State#state.peer_addr]),
+                    io:format(
+                        "[p2p_conn] secure channel established with ~p~n",
+                        [State#state.peer_addr]
+                    ),
                     flush_send_queue(
                         State#state{
                             shared_key = Key,
@@ -95,9 +95,7 @@ process_frames(Socket, Buf, State) ->
                                 {ok, Plain} ->
                                     State#state.node_pid !
                                         {incoming_msg,
-                                         {State#state.peer_addr,
-                                          State#state.node_pid},
-                                         Plain},
+                                            {State#state.peer_addr, State#state.node_pid}, Plain},
                                     process_frames(Socket, Tail, State);
                                 _ ->
                                     process_frames(Socket, Tail, State)
@@ -118,7 +116,6 @@ safe_binary_to_term(Bin) ->
 flush_send_queue(State = #state{shared_key = undefined, sock = Sock}) ->
     inet:setopts(Sock, [{active, once}]),
     {noreply, State};
-
 flush_send_queue(State = #state{sock = Sock, send_queue = Q, shared_key = Key}) ->
     case queue:out(Q) of
         {empty, _} ->
@@ -130,24 +127,30 @@ flush_send_queue(State = #state{sock = Sock, send_queue = Q, shared_key = Key}) 
             flush_send_queue(State#state{send_queue = Q2})
     end.
 
-handle_call({send_plain, Text}, _From,
-            State = #state{shared_key = undefined, send_queue = Q}) ->
+handle_call(
+    {send_plain, Text},
+    _From,
+    State = #state{shared_key = undefined, send_queue = Q}
+) ->
     NewQ = queue:in(Text, Q),
     {reply, {queued, queue:len(NewQ)}, State#state{send_queue = NewQ}};
-
-handle_call({send_plain, Text}, _From,
-            State = #state{shared_key = Key, sock = Sock}) ->
+handle_call(
+    {send_plain, Text},
+    _From,
+    State = #state{shared_key = Key, sock = Sock}
+) ->
     Enc = p2p_crypto:encrypt(Key, Text),
     Reply = send_framed(Sock, term_to_binary({encrypted, Enc})),
     {reply, Reply, State};
-
 handle_call(_, _, State) ->
     {reply, ok, State}.
 
 handle_cast(init_socket, State = #state{sock = Sock, our_pub = Pub}) ->
     inet:setopts(Sock, [{active, once}]),
-    send_framed(Sock,
-        term_to_binary({handshake, p2p_crypto:pubkey_to_bin(Pub)})),
+    send_framed(
+        Sock,
+        term_to_binary({handshake, p2p_crypto:pubkey_to_bin(Pub)})
+    ),
     {noreply, State}.
 
 terminate(_, _) -> ok.

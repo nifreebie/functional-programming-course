@@ -2,8 +2,14 @@
 -behaviour(gen_server).
 
 -export([start_link/1, connect/3, send_message/4]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
+-export([
+    init/1,
+    handle_call/3,
+    handle_cast/2,
+    handle_info/2,
+    terminate/2,
+    code_change/3
+]).
 
 -record(state, {
     listen_socket,
@@ -48,13 +54,16 @@ handle_call({connect, Host, Port, _}, _, State) ->
             gen_tcp:controlling_process(Sock, Conn),
             gen_server:cast(Conn, init_socket),
             erlang:monitor(process, Conn),
-            {reply, ok,
-             State#state{conns = maps:put({Host, Port}, Conn,
-                                          State#state.conns)}};
+            {reply, ok, State#state{
+                conns = maps:put(
+                    {Host, Port},
+                    Conn,
+                    State#state.conns
+                )
+            }};
         Error ->
             {reply, Error, State}
     end;
-
 handle_call({send, Host, Port, Text}, _, State) ->
     Key = {Host, Port},
     case maps:get(Key, State#state.conns, undefined) of
@@ -65,7 +74,6 @@ handle_call({send, Host, Port, Text}, _, State) ->
             Reply = gen_server:call(Conn, {send_plain, Text}),
             {reply, Reply, State}
     end;
-
 handle_call(_, _, State) ->
     {reply, ok, State}.
 
@@ -74,27 +82,26 @@ handle_cast(_, State) ->
 
 handle_info({incoming_msg, Peer, Plain}, State) ->
     Ts = calendar:system_time_to_rfc3339(
-        erlang:system_time(seconds), [{unit, second}]),
+        erlang:system_time(seconds), [{unit, second}]
+    ),
     p2p_history:persist({self(), Peer, Ts, incoming, Plain}),
     io:format("<< [~s] ~p: ~s~n", [Ts, Peer, Plain]),
     {noreply, State};
-
 handle_info({'DOWN', _, process, Pid, _}, State) ->
     NewConns =
         maps:filter(fun(_, V) -> V =/= Pid end, State#state.conns),
     {noreply, State#state{conns = NewConns}};
-
 handle_info({new_connection, Conn, Sock}, State) ->
     erlang:monitor(process, Conn),
     case inet:peername(Sock) of
         {ok, Peer} ->
-            {noreply,
-             State#state{conns =
-                 maps:put(Peer, Conn, State#state.conns)}};
+            {noreply, State#state{
+                conns =
+                    maps:put(Peer, Conn, State#state.conns)
+            }};
         _ ->
             {noreply, State}
     end;
-
 handle_info(_, State) ->
     {noreply, State}.
 

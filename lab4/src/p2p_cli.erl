@@ -73,13 +73,19 @@ parse_cmd(CmdLine) ->
                 {Port, []} when is_integer(Port) ->
                     Text = string:join(Rest, " "),
                     {send, Host, Port, Text};
-                _ -> unknown
+                _ ->
+                    unknown
             end;
-        ["history"] -> history;
-        ["help"] -> help;
-        ["quit"] -> quit;
-        [] -> unknown;
-        _ -> unknown
+        ["history"] ->
+            history;
+        ["help"] ->
+            help;
+        ["quit"] ->
+            quit;
+        [] ->
+            unknown;
+        _ ->
+            unknown
     end.
 
 do_connect(Host, Port) ->
@@ -95,32 +101,46 @@ do_send(NodePid, Host, Port, Text) ->
     Bin = list_to_binary(Text),
     case p2p_node:send_message(NodePid, Host, Port, Bin) of
         ok ->
-            p2p_history:persist({self(), {Host,Port}, human_ts(), outgoing, Bin}),
+            p2p_history:persist({self(), {Host, Port}, human_ts(), outgoing, Bin}),
             io:format("Sent to ~s:~p~n", [Host, Port]);
         {queued, _Len} ->
-            p2p_history:persist({self(), {Host,Port}, human_ts(), outgoing, Bin}),
+            p2p_history:persist({self(), {Host, Port}, human_ts(), outgoing, Bin}),
             io:format("Queued (handshake pending) to ~s:~p~n", [Host, Port]);
         {error, Reason} ->
             io:format("Send error: ~p~n", [Reason]);
         Other ->
-            p2p_history:persist({self(), {Host,Port}, human_ts(), outgoing, Bin}),
+            p2p_history:persist({self(), {Host, Port}, human_ts(), outgoing, Bin}),
             io:format("Send returned: ~p~n", [Other])
     end.
 
 do_history() ->
     Hist = p2p_history:load_all(),
     case Hist of
-        [] -> io:format("History is empty.~n");
+        [] ->
+            io:format("History is empty.~n");
         _ ->
-            lists:foreach(fun(M) ->
-                case M of
-                    {_FromPid, Peer, Ts, Direction, Bin} ->
-                        DirStr = case Direction of incoming -> "<<"; outgoing -> ">>"; _ -> "??" end,
-                        Text = case is_binary(Bin) of true -> binary_to_list(Bin); false -> io_lib:format("~p", [Bin]) end,
-                        io:format("~s ~p : ~s~n", [DirStr, Peer, Text]);
-                    _ -> io:format("~p~n", [M])
-                end
-            end, Hist)
+            lists:foreach(
+                fun(M) ->
+                    case M of
+                        {_FromPid, Peer, Ts, Direction, Bin} ->
+                            DirStr =
+                                case Direction of
+                                    incoming -> "<<";
+                                    outgoing -> ">>";
+                                    _ -> "??"
+                                end,
+                            Text =
+                                case is_binary(Bin) of
+                                    true -> binary_to_list(Bin);
+                                    false -> io_lib:format("~p", [Bin])
+                                end,
+                            io:format("~s ~p : ~s~n", [DirStr, Peer, Text]);
+                        _ ->
+                            io:format("~p~n", [M])
+                    end
+                end,
+                Hist
+            )
     end.
 
 print_help() ->

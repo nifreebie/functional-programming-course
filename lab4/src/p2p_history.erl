@@ -14,7 +14,8 @@ persist(Message) ->
             file:write(File, <<Len:32/big, Bin/binary>>),
             file:close(File),
             ok;
-        Error -> Error
+        Error ->
+            Error
     end.
 
 load_all() ->
@@ -25,8 +26,9 @@ load_all() ->
 
 load_from_bin(<<>>, Acc) ->
     lists:reverse(Acc);
-load_from_bin(<<Len:32/big, Rest/binary>>, Acc)
-  when byte_size(Rest) >= Len ->
+load_from_bin(<<Len:32/big, Rest/binary>>, Acc) when
+    byte_size(Rest) >= Len
+->
     <<MsgBin:Len/binary, Tail/binary>> = Rest,
     load_from_bin(Tail, [binary_to_term(MsgBin) | Acc]);
 load_from_bin(_, Acc) ->

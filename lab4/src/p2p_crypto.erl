@@ -25,8 +25,11 @@ encrypt(Key, Plain) ->
     <<IV/binary, Tag/binary, Cipher/binary>>.
 
 decrypt(Key, <<IV:12/binary, Tag:16/binary, Cipher/binary>>) ->
-    case crypto:crypto_one_time_aead(
-            aes_256_gcm, Key, IV, Cipher, <<>>, Tag, false) of
+    case
+        crypto:crypto_one_time_aead(
+            aes_256_gcm, Key, IV, Cipher, <<>>, Tag, false
+        )
+    of
         error -> {error, bad_tag};
         Plain -> {ok, Plain}
     end;

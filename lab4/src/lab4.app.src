@@ -1,15 +1,15 @@
-{application, lab4,
- [{description, "P2P encrypted CLI messenger"},
-  {vsn, "0.1.0"},
-  {registered, []},
-  {mod, {lab4_app, []}},
-  {applications,
-   [kernel,
-    stdlib,
-    crypto
-   ]},
-  {env,[]},
+{application, lab4, [
+    {description, "P2P encrypted CLI messenger"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {mod, {lab4_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        crypto
+    ]},
+    {env, []},
 
-  {licenses, ["Apache 2.0"]},
-  {links, []}
- ]}.
+    {licenses, ["Apache 2.0"]},
+    {links, []}
+]}.
