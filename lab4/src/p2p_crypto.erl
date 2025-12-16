@@ -8,8 +8,7 @@
 ]).
 
 generate_keypair() ->
-    {Pub, Priv} = crypto:generate_key(ecdh, secp256r1),
-    {Pub, Priv}.
+    crypto:generate_key(ecdh, secp256r1).
 
 pubkey_to_bin(Pub) ->
     term_to_binary(Pub).
@@ -19,15 +18,17 @@ compute_shared_key(TheirPubBin, MyPriv) ->
     Shared = crypto:compute_key(ecdh, TheirPub, MyPriv, secp256r1),
     crypto:hash(sha256, Shared).
 
-encrypt(Key, PlainBin) when is_binary(Key), is_binary(PlainBin) ->
+encrypt(Key, Plain) ->
     IV = crypto:strong_rand_bytes(12),
-    {Cipher, Tag} = crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, PlainBin, <<>>, true),
+    {Cipher, Tag} =
+        crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Plain, <<>>, true),
     <<IV/binary, Tag/binary, Cipher/binary>>.
 
 decrypt(Key, <<IV:12/binary, Tag:16/binary, Cipher/binary>>) ->
-    case crypto:crypto_one_time_aead(aes_256_gcm, Key, IV, Cipher, <<>>, Tag, false) of
+    case crypto:crypto_one_time_aead(
+            aes_256_gcm, Key, IV, Cipher, <<>>, Tag, false) of
         error -> {error, bad_tag};
         Plain -> {ok, Plain}
     end;
-decrypt(_Key, _Other) ->
+decrypt(_, _) ->
     {error, bad_format}.

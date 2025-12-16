@@ -1,8 +1,7 @@
 -module(p2p_cli).
 -export([main/1, start/1]).
 
-main(Args) ->
-    start(Args).
+main(Args) -> start(Args).
 
 start(Args) ->
     case Args of
@@ -23,10 +22,10 @@ start_cli(Port) ->
     ok = p2p_history:start(),
     case p2p_node:start_link([{port, Port}]) of
         {ok, NodePid} ->
-            io:format("P2P node started on port ~p~n", [Port]),
+            io:format("P2P node started on port ~p. Type 'help' for commands.~n", [Port]),
             repl(NodePid);
         {error, Reason} ->
-            io:format("Unable to start a node: ~p~n", [Reason]),
+            io:format("Unable to start node: ~p~n", [Reason]),
             halt(1)
     end.
 
@@ -87,20 +86,25 @@ do_connect(Host, Port) ->
     io:format("Connecting to ~s:~p ...~n", [Host, Port]),
     case p2p_node:connect(Host, Port, 5000) of
         {ok, _ConnPid} -> io:format("Connected to ~s:~p~n", [Host, Port]);
-        {error, Reason} -> io:format("Connect error: ~p~n", [Reason])
+        ok -> io:format("Connected to ~s:~p~n", [Host, Port]);
+        {error, Reason} -> io:format("Connect error: ~p~n", [Reason]);
+        Other -> io:format("Connect returned unexpected: ~p~n", [Other])
     end.
 
 do_send(NodePid, Host, Port, Text) ->
     Bin = list_to_binary(Text),
     case p2p_node:send_message(NodePid, Host, Port, Bin) of
         ok ->
-            p2p_history:persist({self(), {Host,Port}, erlang:system_time(seconds), outgoing, Bin}),
+            p2p_history:persist({self(), {Host,Port}, human_ts(), outgoing, Bin}),
             io:format("Sent to ~s:~p~n", [Host, Port]);
         {queued, _Len} ->
-            p2p_history:persist({self(), {Host,Port}, erlang:system_time(seconds), outgoing, Bin}),
+            p2p_history:persist({self(), {Host,Port}, human_ts(), outgoing, Bin}),
             io:format("Queued (handshake pending) to ~s:~p~n", [Host, Port]);
         {error, Reason} ->
-            io:format("Send error: ~p~n", [Reason])
+            io:format("Send error: ~p~n", [Reason]);
+        Other ->
+            p2p_history:persist({self(), {Host,Port}, human_ts(), outgoing, Bin}),
+            io:format("Send returned: ~p~n", [Other])
     end.
 
 do_history() ->
@@ -113,17 +117,23 @@ do_history() ->
                     {_FromPid, Peer, Ts, Direction, Bin} ->
                         DirStr = case Direction of incoming -> "<<"; outgoing -> ">>"; _ -> "??" end,
                         Text = case is_binary(Bin) of true -> binary_to_list(Bin); false -> io_lib:format("~p", [Bin]) end,
-                        io:format("~s ~p @ ~p : ~s~n", [DirStr, Peer, Ts, Text]);
-                    _ ->
-                        io:format("~p~n", [M])
+                        io:format("~s ~p : ~s~n", [DirStr, Peer, Text]);
+                    _ -> io:format("~p~n", [M])
                 end
             end, Hist)
     end.
 
 print_help() ->
     io:format("Commands:\n"),
-    io:format("  connect <host> <port>        - open TCP connection to peer\n"),
-    io:format("  send <host> <port> <text>    - send text message\n"),
-    io:format("  history                      - show local chat history\n"),
-    io:format("  help                         - this help\n"),
-    io:format("  quit                         - exit\n").
+    io:format("  connect <host> <port>        - open TCP connection to peer~n"),
+    io:format("  send <host> <port> <text>    - send text message~n"),
+    io:format("  history                      - show local chat history~n"),
+    io:format("  help                         - this help~n"),
+    io:format("  quit                         - exit~n").
+
+human_ts() ->
+    Ts = erlang:system_time(seconds),
+    case calendar:system_time_to_rfc3339(Ts, [{unit, second}]) of
+        S when is_list(S) -> S;
+        Bin when is_binary(Bin) -> binary_to_list(Bin)
+    end.
