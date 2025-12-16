@@ -121,7 +121,7 @@ escript p2p_cli.erl **port**
 Отправка
 
 ```bash
->send localhost 5001 hello world
+>send localhost 5001 hello
 ```
 
 Пример получаемого сообщения
